@@ -1,401 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Countdown to 2027</title>
-  <style>
-    /*
-     * DESIGN CONCEPT: "Void Luxe"
-     * Deep-space darkness meets electric aurora — magenta-violet plasma
-     * bleeds through the void, monospaced digits read like mission hardware,
-     * frosted-glass cards float as if lit from within.
-     * One dominant hue: deep violet #1a0033
-     * Electric accent: magenta #c2185b + cobalt #0d47a1
-     */
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pomodoro · Focus Timer</title>
+<style>
+/*
+ * DESIGN CONCEPT: "Void Violet"
+ * Deep-space near-black with electric violet plasma bleeding through the void.
+ * A single glowing ring floats like a mission-control instrument — monospaced
+ * digits read like countdown hardware, ambient orbs breathe in the dark.
+ * Dominant hue: near-black #0d0d14 · Electric accent: violet #7c3aed
+ */
 
-    /* ── Tokens ─────────────────────────────────────────── */
-    :root {
-      --col-void:    #1a0033;
-      --col-magenta: #c2185b;
-      --col-cobalt:  #0d47a1;
-      --col-white:   #ffffff;
-      --col-dim:     rgba(255,255,255,0.7);
-      --col-dimmer:  rgba(255,255,255,0.6);
-      --col-sep:     rgba(255,255,255,0.4);
-      --col-glass:   rgba(255,255,255,0.08);
-      --col-glass-h: rgba(255,255,255,0.14);
-      --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
-      --shadow-card-h: 0 12px 40px rgba(194,24,91,0.35), 0 4px 16px rgba(0,0,0,0.4);
-      --radius: 12px;
-      --blur: blur(6px);
-      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
+/* ── Tokens ─────────────────────────────────────────── */
+:root {
+  --bg-base:        #0d0d14;
+  --bg-grad-a:      #12003a;
+  --bg-grad-b:      #1a0050;
+  --accent:         #7c3aed;
+  --accent-glow:    rgba(124,58,237,0.45);
+  --accent-dim:     rgba(124,58,237,0.25);
+  --text-primary:   #f0eeff;
+  --text-dim:       rgba(240,238,255,0.5);
+  --ring-track:     rgba(124,58,237,0.18);
+  --ring-stroke:    #7c3aed;
+  --btn-bg:         rgba(124,58,237,0.15);
+  --btn-border:     rgba(124,58,237,0.4);
+  --btn-hover-bg:   rgba(124,58,237,0.3);
+  --radius-btn:     8px;
+  --transition:     0.2s ease;
+}
 
-    /* ── Reset ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Reset ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── Animated gradient background ───────────────────── */
-    @keyframes gradientShift {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+/* ── Keyframes ──────────────────────────────────────── */
+@keyframes gradShift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+@keyframes orbFloat {
+  0%,100% { transform: translate(0,0) scale(1);    opacity: 0.6; }
+  33%      { transform: translate(30px,-25px) scale(1.1); opacity: 0.8; }
+  66%      { transform: translate(-20px,18px) scale(0.93); opacity: 0.5; }
+}
+@keyframes ringFlash {
+  0%,100% { stroke: var(--accent); opacity: 1; }
+  50%      { stroke: #fff;          opacity: 0.4; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-    /* Ambient aurora glow orbs */
-    @keyframes orbFloat {
-      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.55; }
-      33%       { transform: translate(40px, -30px) scale(1.08); opacity: 0.7; }
-      66%       { transform: translate(-25px, 20px) scale(0.95); opacity: 0.5; }
-    }
+/* ── Body / background ──────────────────────────────── */
+html, body {
+  height: 100%;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, var(--bg-grad-a), var(--bg-base), var(--bg-grad-b));
+  background-size: 300% 300%;
+  animation: gradShift 14s ease-in-out infinite alternate;
+  position: relative;
+  overflow: hidden;
+}
 
-    /* Card entrance */
-    @keyframes riseIn {
-      from { opacity: 0; transform: translateY(28px) scale(0.96); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
+/* Ambient orb 1 — top-right violet */
+body::before {
+  content: '';
+  position: fixed;
+  width: 520px; height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,0.32) 0%, transparent 70%);
+  top: -140px; right: -100px;
+  pointer-events: none;
+  z-index: 0;
+  animation: orbFloat 10s ease-in-out infinite;
+}
 
-    /* Digit roll flash */
-    @keyframes digitPop {
-      0%   { opacity: 0.4; transform: scaleY(0.85); }
-      60%  { opacity: 1;   transform: scaleY(1.04); }
-      100% { opacity: 1;   transform: scaleY(1); }
-    }
+/* Ambient orb 2 — bottom-left violet */
+body::after {
+  content: '';
+  position: fixed;
+  width: 440px; height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(109,40,217,0.28) 0%, transparent 70%);
+  bottom: -120px; left: -80px;
+  pointer-events: none;
+  z-index: 0;
+  animation: orbFloat 13s ease-in-out infinite reverse;
+}
 
-    /* Heading shimmer */
-    @keyframes shimmer {
-      0%   { background-position: -200% center; }
-      100% { background-position:  200% center; }
-    }
+/* ── Layout ─────────────────────────────────────────── */
+main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  animation: fadeUp 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
 
-    /* Grain overlay pulse */
-    @keyframes grainMove {
-      0%,100% { transform: translate(0,0); }
-      20%     { transform: translate(-2px, 2px); }
-      40%     { transform: translate(2px, -1px); }
-      60%     { transform: translate(-1px, 3px); }
-      80%     { transform: translate(3px, -2px); }
-    }
+/* ── Ring wrapper (positions digits over SVG) ───────── */
+.ring-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
+/* ── SVG ring ───────────────────────────────────────── */
+#ring {
+  width: min(60vw, 280px);
+  height: min(60vw, 280px);
+  overflow: visible;
+}
 
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100%;
-      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: linear-gradient(
-        135deg,
-        var(--col-void) 0%,
-        #2d0050 18%,
-        var(--col-magenta) 38%,
-        #6a0dad 55%,
-        var(--col-cobalt) 72%,
-        #0a1a4a 88%,
-        var(--col-void) 100%
-      );
-      background-size: 300% 300%;
-      animation: gradientShift 12s ease-in-out infinite alternate;
-      position: relative;
-    }
+#ring-progress {
+  transform: rotate(-90deg);
+  transform-origin: center;
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1);
+}
 
-    /* Grain texture overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: -50%;
-      width: 200%;
-      height: 200%;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.04;
-      pointer-events: none;
-      z-index: 0;
-      animation: grainMove 0.15s steps(1) infinite;
-    }
+#ring-progress.ring-flash {
+  animation: ringFlash 0.7s ease-in-out 6 both;
+}
 
-    /* Aurora orb 1 */
-    body::after {
-      content: '';
-      position: fixed;
-      width: 600px;
-      height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(194,24,91,0.28) 0%, transparent 70%);
-      top: -120px;
-      right: -80px;
-      pointer-events: none;
-      z-index: 0;
-      animation: orbFloat 9s ease-in-out infinite;
-    }
+/* ── Digit display ──────────────────────────────────── */
+#display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(3rem, 12vw, 5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 24px var(--accent-glow), 0 2px 4px rgba(0,0,0,0.6);
+  user-select: none;
+  pointer-events: none;
+}
 
-    /* ── Layout ──────────────────────────────────────────── */
-    main {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0;
-      padding: 2rem 1.5rem;
-      text-align: center;
-    }
+/* ── Controls ───────────────────────────────────────── */
+#controls {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+}
 
-    /* Second aurora orb via pseudo on main */
-    main::before {
-      content: '';
-      position: fixed;
-      width: 500px;
-      height: 500px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(13,71,161,0.3) 0%, transparent 70%);
-      bottom: -100px;
-      left: -60px;
-      pointer-events: none;
-      z-index: 0;
-      animation: orbFloat 11s ease-in-out infinite reverse;
-    }
+#controls button {
+  padding: 0.65rem 1.6rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-btn);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition),
+    opacity var(--transition);
+  outline: none;
+}
 
-    /* ── Heading ─────────────────────────────────────────── */
-    h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 700;
-      color: var(--col-white);
-      letter-spacing: 0.05em;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-      margin-bottom: 2.5rem;
-      line-height: 1.1;
-      /* Shimmer gradient clip */
-      background: linear-gradient(
-        90deg,
-        #fff 20%,
-        rgba(255,180,220,0.9) 40%,
-        #fff 50%,
-        rgba(180,200,255,0.9) 60%,
-        #fff 80%
-      );
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 4s linear infinite, riseIn 0.7s var(--ease-spring) both;
-    }
+#btn-start {
+  box-shadow: 0 0 12px var(--accent-dim);
+}
 
-    /* ── Timer row ───────────────────────────────────────── */
-    #timer {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: nowrap;
-    }
+#controls button:hover:not(:disabled) {
+  background: var(--btn-hover-bg);
+  box-shadow: 0 0 16px var(--accent-glow);
+  transform: translateY(-2px);
+}
 
-    /* ── Separator dots ──────────────────────────────────── */
-    .sep {
-      color: var(--col-sep);
-      font-size: clamp(2rem, 6vw, 4rem);
-      align-self: center;
-      line-height: 1;
-      user-select: none;
-      text-shadow: 0 0 12px rgba(194,24,91,0.5);
-    }
+#controls button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 
-    /* ── Digit blocks ────────────────────────────────────── */
-    .block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem 1.5rem;
-      background: var(--col-glass);
-      border-radius: var(--radius);
-      backdrop-filter: var(--blur);
-      -webkit-backdrop-filter: var(--blur);
-      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-      animation: riseIn 0.7s var(--ease-spring) both;
-      min-width: 5.5rem;
-    }
+#controls button:active:not(:disabled) {
+  transform: translateY(0);
+}
 
-    .block:nth-child(1) { animation-delay: 0.05s; }
-    .block:nth-child(3) { animation-delay: 0.15s; }
-    .block:nth-child(5) { animation-delay: 0.25s; }
-    .block:nth-child(7) { animation-delay: 0.35s; }
+#controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
-    .block:hover,
-    .block:focus-within {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-card-h), inset 0 1px 0 rgba(255,255,255,0.18);
-      background: var(--col-glass-h);
-    }
+/* ── Status message ─────────────────────────────────── */
+#status {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+  color: var(--text-primary);
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1.5rem;
+  text-shadow: 0 0 20px var(--accent-glow);
+}
 
-    /* ── Digits ──────────────────────────────────────────── */
-    .digits {
-      display: block;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: clamp(3rem, 12vw, 7rem);
-      font-weight: 700;
-      color: var(--col-white);
-      line-height: 1;
-      letter-spacing: -0.02em;
-      text-shadow:
-        0 0 30px rgba(194,24,91,0.6),
-        0 0 60px rgba(194,24,91,0.2),
-        0 2px 4px rgba(0,0,0,0.5);
-      transition: opacity 0.1s ease;
-    }
+#status.visible {
+  opacity: 1;
+  visibility: visible;
+}
 
-    .digits.pop {
-      animation: digitPop 0.25s ease-out both;
-    }
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 480px) {
+  #ring {
+    width: min(80vw, 240px);
+    height: min(80vw, 240px);
+  }
+  #display {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+  }
+  #controls button {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.85rem;
+  }
+}
 
-    /* ── Labels ──────────────────────────────────────────── */
-    .label {
-      display: block;
-      font-size: clamp(0.6rem, 2vw, 0.85rem);
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      color: var(--col-dim);
-      margin-top: 0.4em;
-      text-transform: uppercase;
-    }
-
-    /* ── Subline ─────────────────────────────────────────── */
-    .subline {
-      font-size: clamp(0.85rem, 2.5vw, 1.1rem);
-      color: var(--col-dimmer);
-      margin-top: 2rem;
-      font-style: italic;
-      letter-spacing: 0.03em;
-      animation: riseIn 0.7s var(--ease-spring) 0.5s both;
-    }
-
-    /* ── Responsive ──────────────────────────────────────── */
-    @media (max-width: 480px) {
-      #timer {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.6rem;
-      }
-      .sep { display: none; }
-      .block { min-width: 4.5rem; padding: 0.75rem 1rem; }
-      h1 { margin-bottom: 1.75rem; }
-    }
-
-    @media (min-width: 481px) {
-      .sep { display: inline; }
-    }
-
-    /* ── Reduced motion ──────────────────────────────────── */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-  </style>
+/* ── Reduced motion ─────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
 </head>
 <body>
-  <main>
-    <h1>Countdown to 2027</h1>
+<main role="main">
 
-    <div id="timer" role="timer" aria-live="polite" aria-label="Time remaining until 2027">
-      <div class="block" tabindex="0">
-        <span class="digits" id="days">000</span>
-        <span class="label">Days</span>
-      </div>
-      <span class="sep" aria-hidden="true">·</span>
-      <div class="block" tabindex="0">
-        <span class="digits" id="hours">00</span>
-        <span class="label">Hours</span>
-      </div>
-      <span class="sep" aria-hidden="true">·</span>
-      <div class="block" tabindex="0">
-        <span class="digits" id="minutes">00</span>
-        <span class="label">Minutes</span>
-      </div>
-      <span class="sep" aria-hidden="true">·</span>
-      <div class="block" tabindex="0">
-        <span class="digits" id="seconds">00</span>
-        <span class="label">Seconds</span>
-      </div>
-    </div>
+  <!-- Ring + digit overlay -->
+  <div class="ring-wrap"
+       role="timer"
+       aria-live="off"
+       aria-label="25 minutes 0 seconds remaining"
+       id="ring-wrap">
 
-    <p class="subline" id="subline">Bring on the new year.</p>
-  </main>
+    <svg id="ring" viewBox="0 0 280 280" aria-hidden="true">
+      <!-- Track -->
+      <circle
+        cx="140" cy="140" r="120"
+        fill="none"
+        stroke="var(--ring-track)"
+        stroke-width="14"
+      />
+      <!-- Progress arc -->
+      <circle
+        id="ring-progress"
+        cx="140" cy="140" r="120"
+        fill="none"
+        stroke="var(--ring-stroke)"
+        stroke-width="14"
+        stroke-linecap="round"
+        stroke-dasharray="753.98"
+        stroke-dashoffset="0"
+      />
+    </svg>
 
-  <script>
-    (function () {
-      'use strict';
+    <div id="display" aria-hidden="true">25:00</div>
+  </div>
 
-      var target   = new Date('2027-01-01T00:00:00').getTime();
-      var daysEl   = document.getElementById('days');
-      var hoursEl  = document.getElementById('hours');
-      var minsEl   = document.getElementById('minutes');
-      var secsEl   = document.getElementById('seconds');
-      var subline  = document.getElementById('subline');
-      var tickCount = 0;
-      var handle;
+  <!-- Buttons -->
+  <div id="controls">
+    <button id="btn-start" aria-label="Start timer">Start</button>
+    <button id="btn-pause" aria-label="Pause timer" disabled>Pause</button>
+    <button id="btn-reset" aria-label="Reset timer">Reset</button>
+  </div>
 
-      function pad(n, len) {
-        return String(Math.max(0, n)).padStart(len, '0');
-      }
+  <!-- Status -->
+  <p id="status" aria-live="polite">Break time</p>
 
-      function popDigit(el, val) {
-        if (el.textContent === val) return;
-        el.textContent = val;
-        el.classList.remove('pop');
-        // Force reflow to restart animation
-        void el.offsetWidth;
-        el.classList.add('pop');
-      }
+</main>
 
-      function tick() {
-        var now  = Date.now();
-        var diff = target - now;
+<script>
+(function () {
+  'use strict';
 
-        if (diff <= 0) {
-          popDigit(daysEl,  '000');
-          popDigit(hoursEl, '00');
-          popDigit(minsEl,  '00');
-          popDigit(secsEl,  '00');
-          subline.textContent = 'Happy New Year 2027! 🎉';
-          clearInterval(handle);
-          return;
-        }
+  var TOTAL       = 25 * 60;
+  var CIRCUMFERENCE = 2 * Math.PI * 120; // ≈ 753.98
 
-        var totalSecs = Math.floor(diff / 1000);
-        var secs  = totalSecs % 60;
-        var totalMins = Math.floor(totalSecs / 60);
-        var mins  = totalMins % 60;
-        var totalHrs = Math.floor(totalMins / 60);
-        var hrs   = totalHrs % 24;
-        var days  = Math.floor(totalHrs / 24);
+  var remaining  = TOTAL;
+  var running    = false;
+  var intervalId = null;
 
-        popDigit(daysEl,  pad(days, 3));
-        popDigit(hoursEl, pad(hrs,  2));
-        popDigit(minsEl,  pad(mins, 2));
-        popDigit(secsEl,  pad(secs, 2));
+  var displayEl  = document.getElementById('display');
+  var progressEl = document.getElementById('ring-progress');
+  var wrapEl     = document.getElementById('ring-wrap');
+  var statusEl   = document.getElementById('status');
+  var btnStart   = document.getElementById('btn-start');
+  var btnPause   = document.getElementById('btn-pause');
+  var btnReset   = document.getElementById('btn-reset');
 
-        // Throttle aria-live announcements to once per minute
-        tickCount++;
-        if (tickCount % 60 === 1) {
-          var timer = document.getElementById('timer');
-          timer.setAttribute('aria-label',
-            pad(days,3) + ' days, ' + pad(hrs,2) + ' hours, ' +
-            pad(mins,2) + ' minutes, ' + pad(secs,2) + ' seconds remaining until 2027'
-          );
-        }
-      }
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
 
-      // Run immediately, then every second
-      tick();
-      handle = setInterval(tick, 1000);
-    })();
-  </script>
+  function updateDisplay() {
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    displayEl.textContent = pad(m) + ':' + pad(s);
+
+    var offset = CIRCUMFERENCE * (1 - remaining / TOTAL);
+    progressEl.setAttribute('stroke-dashoffset', String(offset));
+
+    var label = m + ' minute' + (m !== 1 ? 's' : '') +
+                ' ' + s + ' second' + (s !== 1 ? 's' : '') + ' remaining';
+    wrapEl.setAttribute('aria-label', label);
+  }
+
+  function setButtons(isRunning) {
+    btnStart.disabled = isRunning;
+    btnPause.disabled = !isRunning;
+  }
+
+  function pause() {
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+    running = false;
+    setButtons(false);
+  }
+
+  function tick() {
+    remaining -= 1;
+    updateDisplay();
+    if (remaining <= 0) {
+      pause();
+      statusEl.classList.add('visible');
+      // Flash animation
+      progressEl.classList.remove('ring-flash');
+      void progressEl.offsetWidth; // reflow
+      progressEl.classList.add('ring-flash');
+      progressEl.addEventListener('animationend', function onEnd() {
+        progressEl.removeEventListener('animationend', onEnd);
+        progressEl.classList.remove('ring-flash');
+      });
+    }
+  }
+
+  function start() {
+    if (remaining > 0 && !running) {
+      running = true;
+      setButtons(true);
+      intervalId = setInterval(tick, 1000);
+    }
+  }
+
+  function reset() {
+    pause();
+    remaining = TOTAL;
+    statusEl.classList.remove('visible');
+    progressEl.classList.remove('ring-flash');
+    updateDisplay();
+    setButtons(false);
+  }
+
+  btnStart.addEventListener('click', start);
+  btnPause.addEventListener('click', pause);
+  btnReset.addEventListener('click', reset);
+
+  // Initial render
+  updateDisplay();
+  setButtons(false);
+
+})();
+</script>
 </body>
 </html>
