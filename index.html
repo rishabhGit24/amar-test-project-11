@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Countdown to 2027</title>
+  <style>
+    /* ============================================================
+       DESIGN CONCEPT: "Velvet Cosmos"
+       Luxury dark glass floating in a living violet-magenta-cobalt
+       aurora. Monospaced digits feel like mission-control readouts
+       suspended in deep space. Every surface glows from within.
+    ============================================================ */
+
+    /* ── Tokens ─────────────────────────────────────────────── */
+    :root {
+      --clr-bg-a: #2d0057;
+      --clr-bg-b: #c2006e;
+      --clr-bg-c: #0033cc;
+      --clr-text: #ffffff;
+      --clr-block-bg: rgba(255, 255, 255, 0.08);
+      --clr-block-border: rgba(255, 255, 255, 0.18);
+      --clr-sep: rgba(255, 255, 255, 0.6);
+      --clr-shadow: rgba(0, 0, 0, 0.35);
+      --clr-glow: rgba(194, 0, 110, 0.45);
+      --clr-heading-shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    /* ── Reset & base ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ── Animated aurora background ──────────────────────────── */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--clr-text);
+      background: linear-gradient(
+        135deg,
+        var(--clr-bg-a),
+        var(--clr-bg-b),
+        var(--clr-bg-c),
+        var(--clr-bg-a)
+      );
+      background-size: 400% 400%;
+      animation: gradientShift 12s ease-in-out infinite alternate;
+    }
+
+    /* Grain overlay for atmosphere */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 128px 128px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
+    }
+
+    /* Ambient glow orb */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 60vmax;
+      height: 60vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--clr-glow) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: orbPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes orbPulse {
+      from { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+      to   { opacity: 0.85; transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes digitRoll {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Main layout ─────────────────────────────────────────── */
+    main {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    /* ── Heading ─────────────────────────────────────────────── */
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 3.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 16px var(--clr-heading-shadow);
+      background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ── Timer row ───────────────────────────────────────────── */
+    .timer {
+      display: flex;
+      gap: clamp(0.5rem, 2vw, 1.5rem);
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.8s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ── Glass block ─────────────────────────────────────────── */
+    .block {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--clr-block-bg);
+      border: 1px solid var(--clr-block-border);
+      border-radius: 12px;
+      padding: clamp(1rem, 3vw, 2rem) clamp(0.8rem, 2.5vw, 1.6rem);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      /* Inner highlight */
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        0 4px 24px rgba(0,0,0,0.2);
+    }
+
+    .block:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 8px 32px var(--clr-shadow),
+        0 0 0 1px var(--clr-block-border);
+    }
+
+    /* Separator dots */
+    .block:not(:last-child)::after {
+      content: '·';
+      position: absolute;
+      right: calc(-1 * clamp(0.5rem, 2vw, 1.5rem) / 2 - 0.5ch);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--clr-sep);
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-family: 'Courier New', Courier, monospace;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    /* ── Digits ──────────────────────────────────────────────── */
+    .digits {
+      display: block;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: clamp(3rem, 12vw, 7rem);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      color: var(--clr-text);
+      text-shadow:
+        0 0 40px rgba(255,255,255,0.25),
+        0 2px 8px rgba(0,0,0,0.4);
+      animation: digitRoll 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ── Labels ──────────────────────────────────────────────── */
+    .label {
+      display: block;
+      font-size: clamp(0.6rem, 2vw, 0.9rem);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--clr-text);
+      opacity: 0.65;
+      font-weight: 500;
+    }
+
+    /* ── Subline ─────────────────────────────────────────────── */
+    .subline {
+      margin-top: 1.5rem;
+      font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+      font-style: italic;
+      opacity: 0.75;
+      color: var(--clr-text);
+      animation: fadeUp 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      body { padding: 1rem; }
+      h1   { margin-bottom: 1rem; }
+    }
+
+    /* ── Reduced motion ──────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      body, body::after { animation: none; }
+      h1, .timer, .subline, .digits { animation: none; }
+      .block { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main role="main">
+    <h1>Countdown to 2027</h1>
+
+    <div class="timer">
+      <div class="block">
+        <span class="digits" id="days"   aria-live="polite" aria-atomic="true">000</span>
+        <span class="label">DAYS</span>
+      </div>
+      <div class="block">
+        <span class="digits" id="hours"  aria-live="polite" aria-atomic="true">00</span>
+        <span class="label">HOURS</span>
+      </div>
+      <div class="block">
+        <span class="digits" id="mins"   aria-live="polite" aria-atomic="true">00</span>
+        <span class="label">MINUTES</span>
+      </div>
+      <div class="block">
+        <span class="digits" id="secs"   aria-live="polite" aria-atomic="true">00</span>
+        <span class="label">SECONDS</span>
+      </div>
+    </div>
+
+    <p class="subline">Bring on the new year.</p>
+  </main>
+
+  <script>
+    (function () {
+      var target = new Date('2027-01-01T00:00:00');
+
+      var elDays  = document.getElementById('days');
+      var elHours = document.getElementById('hours');
+      var elMins  = document.getElementById('mins');
+      var elSecs  = document.getElementById('secs');
+
+      function pad2(n) { return String(n).padStart(2, '0'); }
+      function pad3(n) { return String(n).padStart(3, '0'); }
+
+      function tick() {
+        var delta = target - Date.now();
+        if (delta <= 0) {
+          elDays.textContent  = '000';
+          elHours.textContent = '00';
+          elMins.textContent  = '00';
+          elSecs.textContent  = '00';
+          clearInterval(timer);
+          return;
+        }
+        var d = Math.floor(delta / 86400000);
+        var h = Math.floor((delta % 86400000) / 3600000);
+        var m = Math.floor((delta % 3600000)  / 60000);
+        var s = Math.floor((delta % 60000)    / 1000);
+
+        elDays.textContent  = pad3(d);
+        elHours.textContent = pad2(h);
+        elMins.textContent  = pad2(m);
+        elSecs.textContent  = pad2(s);
+      }
+
+      tick();
+      var timer = setInterval(tick, 1000);
+    })();
+  </script>
+</body>
+</html>
